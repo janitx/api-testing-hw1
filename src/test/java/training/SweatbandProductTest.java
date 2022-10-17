@@ -1,11 +1,16 @@
 package training;
 
 import constants.EndPoints;
+import io.restassured.response.Response;
 import models.Product;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class SweatbandProductTest {
 
@@ -13,76 +18,131 @@ public class SweatbandProductTest {
 
     @Test
     public void createSweatband() {
-        Product product = new Product(
-                "Sweatband",
-                "This sweatband is very suitable for various sports",
-                5,
-                3
-        );
 
-        var response = given().body(product).when().post(EndPoints.CREATE).then();
-        response.log().body();
+        Product product = new Product();
+        product.setName("Sweatband");
+        product.setDescription("This sweatband is very suitable for various sports");
+        product.setPrice(5);
+        product.setCategoryId(3);
+
+        Response response = given().body(product)
+                .when()
+                .post(EndPoints.CREATE)
+                .then().log().all()
+                .statusCode(201)
+                .extract()
+                .response();
+
+        String expectedResult = """
+                {"message":"Product was created."}""";
+
+        assertEquals(expectedResult, response.asString());
     }
 
 
     @Test
     public void updateSweatband() {
-        Product product = new Product(
-                1004,
-                "Sweatband",
-                "This sweatband is very suitable for various sports",
-                6,
-                3
-        );
-        var response = given().body(product).when().put(EndPoints.UPDATE).then();
-        response.log().body();
+        Product product = new Product();
+        product.setId(1004);
+        product.setPrice(6);
+
+
+        Response response = given().body(product)
+                .when()
+                .put(EndPoints.UPDATE)
+                .then().log().all()
+                .statusCode(200)
+                .extract()
+                .response();
+
+        String expectedResult = """
+                {"message":"Product updated"}""";
+
+        assertEquals(expectedResult, response.asString());
     }
 
 
     @Test
     public void getSweatband() {
-        var response =
-                given().
-                        queryParam("id", 1004).
-                        when().
-                        get(EndPoints.READ).
-                        then();
-        response.log().body();
+        Product expectedProduct = new Product(
+                1004,
+                "Sweatband",
+                "This sweatband is very suitable for various sports",
+                6.00,
+                3,
+                "Active Wear - Unisex"
+        );
+
+
+        Product actualProduct =
+                given().log().all()
+                        .queryParam("id", "1004")
+                        .then()
+                        .statusCode(200)
+                        .when()
+                        .get(EndPoints.READ)
+                        .as(Product.class);
+        assertThat(actualProduct, samePropertyValuesAs(expectedProduct));
+
     }
+
 
     @Test
     public void deleteSweatband() {
-            String body = """
+        String body = """
                 {
-                "id": 1003
+                "id": 1013
                 }
                 """;
-        var response = given().body(body).when().delete(EndPoints.DELETE).then();
-        response.log().body();
+        Response response = given().body(body)
+                .when()
+                .delete(EndPoints.DELETE)
+                .then().log().all()
+                .statusCode(200)
+                .extract()
+                .response();
+
+        String expectedResult = """
+                {"message":"Product was deleted."}""";
+
+        assertEquals(expectedResult, response.asString());
     }
 
-    // Task2. Challenge:Verify API response
+    // Task2.
+
     @Test
     public void getMultivitamins() {
-            given().
-                queryParam("id", 18).
-                when().
-                get(EndPoints.READ).
-                then().
-                assertThat().
-                statusCode(200).
-                header("Content-Type", equalTo("application/json")).
-                body("id", equalTo("18")).
-                body("name", equalTo("Multi-Vitamin (90 capsules)")).
-                body("description", equalTo("A daily dose of our Multi-Vitamins fulfills a day’s nutritional needs for over 12 vitamins and minerals.")).
-                body("price", equalTo("10.00")).
-                body("category_id", equalTo("4")).
-                body("category_name", equalTo("Supplements"))
-               .log().body();
+        Product expectedProduct = new Product(
+                18,
+                "Multi-Vitamin (90 capsules)",
+                "A daily dose of our Multi-Vitamins fulfills a day’s nutritional needs for over 12 vitamins and minerals.",
+                10.00,
+                4,
+                "Supplements"
+        );
+
+
+        Product actualProduct =
+                given().log().all()
+                        .queryParam("id", expectedProduct.getId())
+                        .then()
+                        .statusCode(200)
+                        .when()
+                        .get(EndPoints.READ)
+                        .as(Product.class);
+
+        SoftAssertions softAssertions = new SoftAssertions();
+
+        softAssertions.assertThat(actualProduct.getId()).isEqualTo(expectedProduct.getId());
+        softAssertions.assertThat(actualProduct.getName()).isEqualTo(expectedProduct.getName());
+        softAssertions.assertThat(actualProduct.getDescription()).isEqualTo(expectedProduct.getDescription());
+        softAssertions.assertThat(actualProduct.getPrice()).isEqualTo(expectedProduct.getPrice());
+        softAssertions.assertThat(actualProduct.getCategoryId()).isEqualTo(expectedProduct.getCategoryId());
+        softAssertions.assertThat(actualProduct.getCategoryName()).isEqualTo(expectedProduct.getCategoryName());
+        softAssertions.assertAll();
 
 
     }
-
 
 
 }
