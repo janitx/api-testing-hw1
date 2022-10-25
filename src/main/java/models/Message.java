@@ -8,10 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDto {
+public class Message {
     private String message;
 
-    public String asString() {
-        return String.format("{\"message\":\"%s\"}", message);
-    }
 }

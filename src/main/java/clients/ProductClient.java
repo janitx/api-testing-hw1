@@ -3,68 +3,57 @@ package clients;
 import constants.EndPoints;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import models.MessageDto;
-import models.ProductDto;
+import models.Message;
+import models.Product;
 
 import static io.restassured.RestAssured.given;
 
 public class ProductClient {
 
-    public static <D> MessageDto create(D productDto) {
-        Response response = given().body(productDto)
+    public static <D> Message create(D productDto) {
+
+        return given().body(productDto)
+                .given().log().all()
+                .then()
+                .statusCode(201)
                 .when()
                 .post(EndPoints.CREATE)
-                .then().log().all()
-                .statusCode(201)
-                .extract()
-                .response();
+                .as(Message.class);
 
-        String jsonString = response.asString();
-        JsonPath jp = new JsonPath(jsonString);
-
-        return new MessageDto(jp.get("message").toString());
 
     }
 
-    public static <D> MessageDto update(D productDto) {
-        Response response = given().body(productDto)
+    public static <D> Message update(D productDto) {
+        return given().body(productDto)
+                .given().log().all()
+                .then()
+                .statusCode(200)
                 .when()
                 .put(EndPoints.UPDATE)
-                .then().log().all()
-                .statusCode(200)
-                .extract()
-                .response();
-
-        String jsonString = response.asString();
-        JsonPath jp = new JsonPath(jsonString);
-
-        return new MessageDto(jp.get("message").toString());
+                .as(Message.class);
 
     }
 
-    public static ProductDto get(int id) {
+    public static Product get(int id) {
         return given().log().all()
                 .queryParam("id", id)
                 .then()
                 .statusCode(200)
                 .when()
                 .get(EndPoints.READ)
-                .as(ProductDto.class);
+                .as(Product.class);
     }
 
-    public static <D> MessageDto delete(D productDto) {
-        Response response = given().body(productDto)
+    public static <D> Message delete(D productDto) {
+        return given().body(productDto)
+                .given().log().all()
+                .then()
+                .statusCode(200)
                 .when()
                 .delete(EndPoints.DELETE)
-                .then().log().all()
-                .statusCode(200)
-                .extract()
-                .response();
+                .as(Message.class);
 
-        String jsonString = response.asString();
-        JsonPath jp = new JsonPath(jsonString);
 
-        return new MessageDto(jp.get("message").toString());
     }
 
 }
